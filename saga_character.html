@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saga Character Creator</title>
+    <style>
+        :root {
+            --primary-color: #2a4365;
+            --border-color: #cbd5e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #2d3748;
+        }
+
+        h3 {
+            margin-top: 2px;
+            margin-bottom: 4px;
+        }
+
+        .character-sheet {
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: flex-start;  /* Align items to the top */
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: calc(100% - 16px); /* Subtract padding from width */
+            box-sizing: border-box; /* Include padding in width calculation */
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        /* Add these styles to the existing CSS */
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+            box-sizing: border-box;
+            resize: vertical;     /* Only allow vertical resizing */
+            min-height: 60px;     /* Minimum height */
+        }
+
+        /* Make text areas more compact on mobile */
+        @media (max-width: 600px) {
+            textarea {
+                padding: 6px;
+                font-size: 14px;
+            }
+        }
+
+        .resource-pool {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap; /* Allow wrapping on very small screens */
+        }
+
+        .resource-pool input {
+            width: 60px;     /* Slightly smaller fixed width */
+            min-width: 40px;  /* Prevent too small inputs */
+        }
+
+        .traits-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .traits-table th,
+        .traits-table td {
+            border: 1px solid var(--border-color);
+            padding: 4px;  
+            text-align: left;
+        }
+
+        .traits-table th {
+            background-color: #f7fafc;
+        }
+
+        .action-symbols {
+            font-size: 1.2em;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        @media print {
+            .buttons {
+                display: none;
+            }
+            body {
+                padding: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Talent CSS */
+        .talent-box {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .talent-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .talent-field {
+            flex: 1;
+        }
+
+        .talent-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .action-select {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-option {
+            cursor: pointer;
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            opacity: 0.5;
+        }
+
+        .action-option.selected {
+            opacity: 1;
+            background-color: #e2e8f0;
+        }
+
+        .talent-button {
+            margin-top: 10px;
+            background-color: #4a5568;
+        }
+
+        @media (max-width: 600px) {
+            .talent-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="character-sheet">
+        <!-- Name Section -->
+        <div class="section">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="playerName">Player Name</label>
+                    <input type="text" id="playerName" name="playerName">
+                </div>
+                <div class="form-group">
+                    <label for="characterName">Character Name</label>
+                    <input type="text" id="characterName" name="characterName">
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources Section -->
+        <div class="section">
+            <h3>Resources</h3>
+            <div class="form-row">
+                <!-- Wounds -->
+                <div class="form-group">
+                    <label>Wounds</label>
+                    <div class="resource-pool">
+                        <input type="number" id="woundsCurrent" name="woundsCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="woundsMax" name="woundsMax" min="0">
+                    </div>
+                </div>
+                <!-- Stress -->
+                <div class="form-group">
+                    <label>Stress</label>
+                    <div class="resource-pool">
+                        <input type="number" id="stressCurrent" name="stressCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="stressMax" name="stressMax" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bulk</label>
+                    <div class="resource-pool">
+                        <input type="number" id="bulkCurrent" name="bulkCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="bulkMax" name="bulkMax" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>XP</label>
+                    <div class="resource-pool">
+                        <input type="number" id="xpCurrent" name="xpCurrent" min="0">
+                        <span>
+                    </div>
+                </div>
+            </div>
+            <!-- Defenses -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Armor</label>
+                    <div class="resource-pool">
+                        <input type="number" id="armorCurrent" name="armorCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="armorMax" name="armorMax" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Block</label>
+                    <div class="resource-pool">
+                        <input type="number" id="blockCurrent" name="blockCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="blockMax" name="blockMax" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Dodge</label>
+                    <div class="resource-pool">
+                        <input type="number" id="dodgeCurrent" name="dodgeCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="dodgeMax" name="dodgeMax" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Parry</label>
+                    <div class="resource-pool">
+                        <input type="number" id="parryCurrent" name="parryCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="parryMax" name="parryMax" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <!-- Mana -->
+                <div class="form-group">
+                    <label>Mana</label>
+                    <div class="resource-pool">
+                        <input type="number" id="manaCurrent" name="manaCurrent" min="0">
+                        <span>/</span>
+                        <input type="number" id="manaMax" name="manaMax" min="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+        <!-- Build -->
+        <div class="section">
+            <h3>Build</h3>
+            <table class="traits-table">
+                <tr>
+                    <th>Trait</th>
+                    <th>Score</th>
+                </tr>
+                <tr>
+                    <td>Strength</td>
+                    <td><input type="number" id="strengthScore" name="strengthScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Dexterity</td>
+                    <td><input type="number" id="dexterityScore" name="dexterityScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Endurance</td>
+                    <td><input type="number" id="enduranceScore" name="enduranceScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Intelligence</td>
+                    <td><input type="number" id="intelligenceScore" name="intelligenceScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Wisdom</td>
+                    <td><input type="number" id="wisdomScore" name="wisdomScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Charisma</td>
+                    <td><input type="number" id="charismaScore" name="charismaScore" min="0"></td>
+                </tr>
+            </table>
+
+            <table class="traits-table">
+                <tr>
+                    <th>Skill</th>
+                    <th>Score</th>
+                </tr>
+                <tr>
+                    <td>Athletics</td>
+                    <td><input type="number" id="athleticsScore" name="athleticsScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Artisan</td>
+                    <td><input type="number" id="artisanScore" name="artisanScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Crafting</td>
+                    <td><input type="number" id="craftingScore" name="craftingScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Engineering</td>
+                    <td><input type="number" id="engineeringScore" name="engineeringScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Insight</td>
+                    <td><input type="number" id="insightScore" name="insightScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Investigation</td>
+                    <td><input type="number" id="investigationScore" name="investigationScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Lore</td>
+                    <td><input type="number" id="loreScore" name="loreScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Medicine</td>
+                    <td><input type="number" id="medicineScore" name="medicineScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Melee Combat</td>
+                    <td><input type="number" id="meleeCombatScore" name="meleeCombatScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Occultism</td>
+                    <td><input type="number" id="occultismScore" name="occultismScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Perception</td>
+                    <td><input type="number" id="perceptionScore" name="perceptionScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Ranged Combat</td>
+                    <td><input type="number" id="rangedCombatScore" name="rangedCombatScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Society</td>
+                    <td><input type="number" id="societyScore" name="societyScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Sneak</td>
+                    <td><input type="number" id="sneakScore" name="sneakScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Influence</td>
+                    <td><input type="number" id="influenceScore" name="influenceScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Thievery</td>
+                    <td><input type="number" id="thieveryScore" name="thieveryScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Unarmed Combat</td>
+                    <td><input type="number" id="unarmedCombatScore" name="unarmedCombatScore" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Wilderness</td>
+                    <td><input type="number" id="wildernessScore" name="wildernessScore" min="0"></td>
+                </tr>                
+            </table>
+        </div>
+
+        <!-- Talents -->
+        <!-- Unfortunately, talents don't seem to export/import properly -->
+        <div class="section">
+            <h3>Talents</h3>
+            <div id="talents-container">
+                <!-- Talent boxes will be dynamically added here -->
+            </div>
+            <button type="button" onclick="addTalent()" class="talent-button">Add Talent</button>
+        </div>        
+
+        <!-- RP -->
+        <div class="section">
+            <h3>Roleplaying</h3>
+            <div class="form-group">
+                <label for="appearance">Appearance</label>
+                <textarea id="appearance" name="appearance" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="beliefs">Beliefs</label>
+                <textarea id="beliefs" name="beliefs" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="drive">Drive</label>
+                <textarea id="drive" name="drive" rows="1"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="weaknesses">Weaknesses</label>
+                <textarea id="weaknesses" name="weaknesses" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="passions">Passions</label>
+                <textarea id="passions" name="passions" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="notes">Backstory</label>
+                <textarea id="notes" name="notes" rows="4"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+        <button type="button" onclick="saveCharacter()">Save Character</button>
+        <button type="button" onclick="loadCharacter()">Load Character</button>
+        <button type="button" onclick="window.print()">Print Sheet</button>
+    </div>
+
+    <script>
+        // Talent Forms
+        function createTalentBox() {
+            const talentBox = document.createElement('div');
+            talentBox.className = 'talent-box';
+            
+            const talentId = Date.now(); // Unique ID for this talent's fields
+            
+            talentBox.innerHTML = `
+                <div class="talent-row">
+                    <div class="talent-field">
+                        <label for="talent-name-${talentId}">Talent</label>
+                        <input type="text" id="talent-name-${talentId}" name="talent-name-${talentId}">
+                    </div>
+                    <div class="talent-field">
+                        <label>Action(s)</label>
+                        <div class="action-select" data-talent-id="${talentId}">
+                            <div class="action-option" data-action="1">▶</div>
+                            <div class="action-option" data-action="2">▶▶</div>
+                            <div class="action-option" data-action="3">▶▶▶</div>
+                            <div class="action-option" data-action="reaction">↺</div>
+                        </div>
+                        <input type="hidden" id="talent-action-${talentId}" name="talent-action-${talentId}">
+                    </div>
+                </div>
+                <div class="talent-field">
+                    <label for="talent-properties-${talentId}">Properties</label>
+                    <input type="text" id="talent-properties-${talentId}" name="talent-properties-${talentId}">
+                </div>
+                <div class="talent-field">
+                    <label for="talent-description-${talentId}">Description</label>
+                    <textarea id="talent-description-${talentId}" name="talent-description-${talentId}" rows="3"></textarea>
+                </div>
+            `;
+            
+            // Add click handlers for action selection
+            const actionSelect = talentBox.querySelector('.action-select');
+            actionSelect.addEventListener('click', (e) => {
+                if (e.target.classList.contains('action-option')) {
+                    const options = actionSelect.querySelectorAll('.action-option');
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    
+                    const hiddenInput = document.getElementById(`talent-action-${talentId}`);
+                    hiddenInput.value = e.target.dataset.action;
+                }
+            });
+            
+            return talentBox;
+        }
+
+        function addTalent() {
+            const container = document.getElementById('talents-container');
+            container.appendChild(createTalentBox());
+        }
+
+
+        // Update the serialization function to handle talents properly
+        function serializeForm() {
+            const formData = {};
+            
+            // Handle all non-talent inputs first
+            document.querySelectorAll('input:not([id^="talent-"]), textarea:not([id^="talent-"])').forEach(input => {
+                formData[input.name] = input.value;
+            });
+            
+            // Handle talents separately to ensure we capture everything
+            const talentBoxes = document.querySelectorAll('.talent-box');
+            talentBoxes.forEach(box => {
+                const talentId = box.querySelector('.action-select').dataset.talentId;
+                
+                // Get talent name
+                const nameInput = box.querySelector(`#talent-name-${talentId}`);
+                if (nameInput) formData[`talent-name-${talentId}`] = nameInput.value;
+                
+                // Get talent properties
+                const propsInput = box.querySelector(`#talent-properties-${talentId}`);
+                if (propsInput) formData[`talent-properties-${talentId}`] = propsInput.value;
+                
+                // Get talent description
+                const descInput = box.querySelector(`#talent-description-${talentId}`);
+                if (descInput) formData[`talent-description-${talentId}`] = descInput.value;
+                
+                // Get selected action
+                const selectedAction = box.querySelector('.action-option.selected');
+                if (selectedAction) {
+                    formData[`talent-action-${talentId}`] = selectedAction.dataset.action;
+                }
+            });
+            
+            console.log('Serialized data:', formData); // Debug log
+            return btoa(JSON.stringify(formData));
+        }
+
+        // Direct implementation of deserialize without original function reference
+        function deserializeForm(data) {
+            try {
+                console.log('Raw data received:', data); // Debug log
+                const formData = JSON.parse(atob(data));
+                console.log('Decoded data:', formData); // Debug log
+
+                // First handle all non-talent fields
+                Object.entries(formData).forEach(([name, value]) => {
+                    if (!name.startsWith('talent-')) {
+                        const input = document.querySelector(`[name="${name}"]`);
+                        if (input) {
+                            console.log(`Setting ${name} to:`, value);
+                            input.value = value;
+                        } else {
+                            console.log(`Input not found for: ${name}`);
+                        }
+                    }
+                });
+                
+                // Group talent data by ID
+                const talents = {};
+                Object.entries(formData).forEach(([name, value]) => {
+                    if (name.startsWith('talent-')) {
+                        const [, field, id] = name.split('-');
+                        if (!talents[id]) {
+                            talents[id] = {};
+                        }
+                        talents[id][field] = value;
+                    }
+                });
+                
+                console.log('Grouped talents:', talents); // Debug log
+                
+                // Clear existing talents
+                const talentsContainer = document.getElementById('talents-container');
+                if (!talentsContainer) {
+                    console.error('Talents container not found!'); // Debug log
+                    return;
+                }
+                talentsContainer.innerHTML = '';
+                
+                // Create new talent boxes for each talent
+                Object.entries(talents).forEach(([id, talentData]) => {
+                    console.log('Creating talent box for:', id, talentData); // Debug log
+                    const talentBox = createTalentBox();
+                    talentsContainer.appendChild(talentBox);
+                    
+                    // Log the new ID we're working with
+                    const newId = talentBox.querySelector('.action-select').dataset.talentId;
+                    console.log('New talent ID:', newId); // Debug log
+                    
+                    // Fill in the data
+                    ['name', 'properties', 'description'].forEach(field => {
+                        const input = document.getElementById(`talent-${field}-${newId}`);
+                        if (input && talentData[field]) {
+                            console.log(`Setting ${field} to:`, talentData[field]); // Debug log
+                            input.value = talentData[field];
+                        }
+                    });
+                    
+                    // Handle action selection
+                    if (talentData.action) {
+                        const actionSelect = talentBox.querySelector('.action-select');
+                        const option = actionSelect.querySelector(`[data-action="${talentData.action}"]`);
+                        if (option) {
+                            const options = actionSelect.querySelectorAll('.action-option');
+                            options.forEach(opt => opt.classList.remove('selected'));
+                            option.classList.add('selected');
+                            document.getElementById(`talent-action-${newId}`).value = talentData.action;
+                        }
+                    }
+                });
+                
+                // If no talents were loaded, add the default two
+                if (Object.keys(talents).length === 0) {
+                    addTalent();
+                    addTalent();
+                }
+                
+            } catch (e) {
+                console.error('Deserialization error:', e); // Debug error
+                alert('Invalid character data!');
+            }
+        }
+        // Save character data
+        function saveCharacter(e) {
+            if (e) e.preventDefault();
+            const serialized = serializeForm();
+            // Save to clipboard
+            navigator.clipboard.writeText(serialized).then(() => {
+                alert('Character data copied to clipboard!');
+            });
+            // Save to local storage
+            localStorage.setItem('characterData', serialized);
+        }
+
+        // Load character data
+        function loadCharacter(e) {
+            if (e) e.preventDefault();
+            const data = prompt('Paste character data or leave empty to load last saved character:');
+            if (data) {
+                deserializeForm(data);
+            } else {
+                const savedData = localStorage.getItem('characterData');
+                if (savedData) {
+                    deserializeForm(savedData);
+                } else {
+                    alert('No saved character found!');
+                }
+            }
+        }
+
+        // Add initialization to the existing window.onload or add it if it doesn't exist
+        const existingOnload = window.onload || function(){};
+        window.onload = function() {
+            existingOnload();
+            // Add initial two talent boxes
+            addTalent();
+            addTalent();
+        };
+    </script>
+</body>
+</html>
